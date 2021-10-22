@@ -76,17 +76,22 @@ void autonomous() {}
 void opcontrol() {
 
 
+
+	//PORTS
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1);
-	pros::Motor right_mtr(2,true);
+	pros::Motor liftL(1, false);
+	pros::Motor liftR(2,true);
 	pros::Motor clamp(3);
 	pros::Motor conveyor(4);
 	okapi::MotorGroup leftWheels({5, 6});
   okapi::MotorGroup rightWheels({-7, -8});
 
+	//BRAKES
 	clamp.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	liftL.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	liftR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	conveyor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
 using namespace okapi;
 	std::shared_ptr<okapi::ChassisController> drive =
 		okapi::ChassisControllerBuilder()
@@ -108,16 +113,16 @@ using namespace okapi;
 
     // LIFT
 		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-			left_mtr.move_velocity(135);
-			right_mtr.move_velocity(135);
+			liftL.move_velocity(135);
+			liftR.move_velocity(135);
 		}
 		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-			left_mtr.move_velocity(-95);
-			right_mtr.move_velocity(-95);
+			liftL.move_velocity(-95);
+			liftR.move_velocity(-95);
 		}
 		else{
-			left_mtr.move_velocity(0);
-			right_mtr.move_velocity(0);
+			liftL.move_velocity(0);
+			liftR.move_velocity(0);
 		}
 
 		//CLAMP
