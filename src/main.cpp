@@ -79,12 +79,25 @@ void opcontrol() {
 
 	//PORTS
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor liftL(1, false);
-	pros::Motor liftR(2,true);
-	pros::Motor clamp(3);
-	pros::Motor conveyor(4);
+
+
+	pros::Motor liftL(1, true);
+	pros::Motor liftR(2, false);
+	pros::Motor clamp(3, false);
+	pros::Motor conveyor(4, false);
+
+	//*
 	okapi::MotorGroup leftWheels({5, 6});
   okapi::MotorGroup rightWheels({-7, -8});
+
+	//*/
+	/*
+	pros::Motor left_front (5);
+	pros::Motor left_back (6);
+	pros::Motor right_front (7,true);
+  pros::Motor right_back (8, true);
+
+	*/
 
 	//BRAKES
 	clamp.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -106,19 +119,31 @@ using namespace okapi;
 		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
 
-
+	 ///*
 	 // DRIVE TRAIN
 	 drive->getModel()->arcade(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y), //leftY
 	 	                              master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)); //rightx
+		//*/
+		/*
+
+		int power = master.get_analog(ANALOG_LEFT_Y);
+    int turn = master.get_analog(ANALOG_RIGHT_X);
+    int left = power + turn;
+    int right = power - turn;
+    left_front.move(left);
+    right_front.move(right);
+		left_back.move(left);
+    right_back.move(right);
+		*/
 
     // LIFT
 		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-			liftL.move_velocity(135);
-			liftR.move_velocity(135);
+			liftL.move_velocity(100);
+			liftR.move_velocity(100);
 		}
 		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-			liftL.move_velocity(-95);
-			liftR.move_velocity(-95);
+			liftL.move_velocity(-100);
+			liftR.move_velocity(-100);
 		}
 		else{
 			liftL.move_velocity(0);
@@ -126,15 +151,15 @@ using namespace okapi;
 		}
 
 		//CLAMP
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) clamp.move_velocity(25);
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) clamp.move_velocity(-25);
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) clamp.move_velocity(100);
+		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) clamp.move_velocity(-100);
 		else clamp.move_velocity(0);
 
 		//CONVEYOR
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) conveyor.move_velocity(100);
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) conveyor.move_velocity(-100);
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) conveyor.move_velocity(200);
+		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) conveyor.move_velocity(-200);
 		else conveyor.move_velocity(0);
 
-		pros::delay(20);
+		pros::delay(10);
 	}
 }
