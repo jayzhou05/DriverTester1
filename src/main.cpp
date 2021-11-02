@@ -58,7 +58,33 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	okapi::MotorGroup leftWheels({5, 6});
+  okapi::MotorGroup rightWheels({-7, -8});
+
+	using namespace okapi;
+		std::shared_ptr<OdomChassisController> chassis =
+		  ChassisControllerBuilder()
+		    .withMotors(leftWheels, rightWheels)
+		    // green gearset, 4 inch wheel diameter, 11.5 inch wheel track
+		    .withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR})
+		    .withOdometry()
+		    .buildOdometry();
+		std::shared_ptr<AsyncPositionController<double, double>> lift =
+		  AsyncPosControllerBuilder()
+				.withMotor(3)
+				.withGains({0, 0, 0})
+				.build();
+
+		chassis->setState({0_in, 0_in, 0_deg});
+		chassis->driveToPoint({1_ft, 0_ft});
+		lift->setTarget(-90);
+		lift->waitUntilSettled();
+		chassis->driveToPoint({0_ft, 0_ft});
+
+
+
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
