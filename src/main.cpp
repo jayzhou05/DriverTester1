@@ -112,18 +112,16 @@ void opcontrol() {
 	pros::Motor clamp(3, false);
 	pros::Motor conveyor(4, false);
 
-	//*
-	okapi::MotorGroup leftWheels({5, 6});
-  okapi::MotorGroup rightWheels({-7, -8});
-
-	//*/
 	/*
-	pros::Motor left_front (5);
-	pros::Motor left_back (6);
-	pros::Motor right_front (7,true);
-  pros::Motor right_back (8, true);
+	okapi::MotorGroup leftWheels({5, 14});
+  okapi::MotorGroup rightWheels({-19, -16});
+ */
 
-	*/
+	pros::Motor left_front (5);
+	pros::Motor left_back (14);
+	pros::Motor right_front (19,true);
+  pros::Motor right_back (16, true);
+
 
 	//BRAKES
 	clamp.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -132,6 +130,8 @@ void opcontrol() {
 	conveyor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
 using namespace okapi;
+
+/*
 	std::shared_ptr<okapi::ChassisController> drive =
 		okapi::ChassisControllerBuilder()
 				.withMotors(leftWheels, rightWheels)
@@ -139,18 +139,18 @@ using namespace okapi;
 				.withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR}) //change wheelbase 11.5 pls
 				.build();
 
-
+*/
 	while (true) {
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
 
-	 ///*
+	 /*
 	 // DRIVE TRAIN
 	 drive->getModel()->arcade(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y), //leftY
 	 	                              master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)); //rightx
-		//*/
-		/*
+		*/
+
 
 		int power = master.get_analog(ANALOG_LEFT_Y);
     int turn = master.get_analog(ANALOG_RIGHT_X);
@@ -160,7 +160,7 @@ using namespace okapi;
     right_front.move(right);
 		left_back.move(left);
     right_back.move(right);
-		*/
+
 
     // LIFT
 		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
