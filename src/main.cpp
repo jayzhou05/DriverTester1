@@ -59,6 +59,7 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+	/*
 	okapi::MotorGroup leftWheels({5, 6});
   okapi::MotorGroup rightWheels({-7, -8});
 
@@ -67,20 +68,26 @@ void autonomous() {
 		  ChassisControllerBuilder()
 		    .withMotors(leftWheels, rightWheels)
 		    // green gearset, 4 inch wheel diameter, 11.5 inch wheel track
-		    .withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR})
+		    .withDimensions(AbstractMotor::gearset::green, {{4_in, 11.125_in}, imev5GreenTPR})
 		    .withOdometry()
 		    .buildOdometry();
-		std::shared_ptr<AsyncPositionController<double, double>> lift =
+		std::shared_ptr<AsyncPositionController<double, double>> back =
 		  AsyncPosControllerBuilder()
 				.withMotor(3)
+				.withGains({0, 0, 0})
+				.build();
+		std::shared_ptr<AsyncPositionController<double, double>> lift =
+		  AsyncPosControllerBuilder()
+				.withMotor({-1,2})
 				.withGains({0, 0, 0})
 				.build();
 
 		chassis->setState({0_in, 0_in, 0_deg});
 		chassis->driveToPoint({1_ft, 0_ft});
-		lift->setTarget(-90);
+		back->setTarget(-180);
 		lift->waitUntilSettled();
 		chassis->driveToPoint({0_ft, 0_ft});
+		*/
 
 
 
@@ -101,16 +108,13 @@ void autonomous() {
  */
 void opcontrol() {
 
-
-
 	//PORTS
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-
 	pros::Motor liftL(1, true);
 	pros::Motor liftR(2, false);
-	pros::Motor clamp(3, false);
-	pros::Motor conveyor(4, false);
+	pros::Motor back(3, false);
+	pros::Motor hook(4, false);
 
 	/*
 	okapi::MotorGroup leftWheels({5, 14});
@@ -122,12 +126,16 @@ void opcontrol() {
 	pros::Motor right_front (19,true);
   pros::Motor right_back (16, true);
 
-
 	//BRAKES
-	clamp.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	liftL.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	liftR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	conveyor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	back.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	liftL.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	liftR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	hook.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
+	left_front.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	left_back.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	right_front.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	right_back.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
 using namespace okapi;
 
@@ -152,14 +160,42 @@ using namespace okapi;
 		*/
 
 
-		int power = master.get_analog(ANALOG_LEFT_Y);
-    int turn = master.get_analog(ANALOG_RIGHT_X);
-    int left = power + turn;
-    int right = power - turn;
-    left_front.move(left);
-    right_front.move(right);
-		left_back.move(left);
-    right_back.move(right);
+		float LEFTY= master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+		float RIGHTX= master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+
+		//Linear multiply so forward/backward maxes at 100
+		LEFTY = LEFTY * 1.27;
+		if(LEFTY>127){
+			LEFTY = 127;
+		}
+
+		//Linear multiply for turns (no longer used)
+		//RIGHTX = RIGHTX * 5/6;
+
+		//Deadzones
+		if( (LEFTY < 5) && (LEFTY > -5) ){
+			LEFTY=0;
+		}
+		if( (RIGHTX < 5) && (RIGHTX > -5) ){
+			RIGHTX=0;
+		}
+
+		double turnConst = 1.5;       // lower = linear, higher = cubic; cannot be 0
+		double turnInput = master.get_analog(ANALOG_RIGHT_X) * (double)105.0 / 127.0;
+		double turnSpeed = turnConst * (pow(turnInput, 3) / 10000 + turnInput / turnConst) / (turnConst + 1);
+
+		float frontLeftMod = (LEFTY + turnSpeed); //front left
+		float frontRightMod = (LEFTY - turnSpeed); //front right
+		float backLeftMod = (LEFTY + turnSpeed); //back left
+		float backRightMod = (LEFTY - turnSpeed); //back right
+
+		left_front.move_velocity(frontLeftMod*(200/127));
+    right_front.move_velocity(frontRightMod*(200/127));
+		left_back.move_velocity(backLeftMod*(200/127));
+    right_back.move_velocity(backRightMod*(200/127));
+
+
+
 
 
     // LIFT
@@ -176,15 +212,15 @@ using namespace okapi;
 			liftR.move_velocity(0);
 		}
 
-		//CLAMP
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) clamp.move_velocity(100);
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) clamp.move_velocity(-100);
-		else clamp.move_velocity(0);
+		//BACK
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) back.move_velocity(100);
+		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) back.move_velocity(-100);
+		else back.move_velocity(0);
 
-		//CONVEYOR
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) conveyor.move_velocity(200);
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) conveyor.move_velocity(-200);
-		else conveyor.move_velocity(0);
+		//HOOK
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) hook.move_velocity(200);
+		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) hook.move_velocity(-200);
+		else hook.move_velocity(0);
 
 		pros::delay(10);
 	}
