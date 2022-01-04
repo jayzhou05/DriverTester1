@@ -111,9 +111,10 @@ void opcontrol() {
 	//PORTS
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-	pros::Motor liftL(1, true);
-	pros::Motor liftR(2, false);
-	pros::Motor back(3, false);
+
+	pros::Motor liftL(14, true);
+	pros::Motor liftR(18, false);
+	pros::Motor back(15, false);
 	pros::Motor hook(4, false);
 
 	/*
@@ -121,15 +122,15 @@ void opcontrol() {
   okapi::MotorGroup rightWheels({-19, -16});
  */
 
-	pros::Motor left_front (5);
-	pros::Motor left_back (14);
-	pros::Motor right_front (19,true);
-  pros::Motor right_back (16, true);
+	pros::Motor left_front (15);
+	pros::Motor left_back (19);
+	pros::Motor right_front (16,true);
+  pros::Motor right_back (17, true);
 
 	//BRAKES
 	back.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	liftL.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-	liftR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	liftL.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	liftR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	hook.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
 	left_front.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -137,7 +138,15 @@ void opcontrol() {
 	right_front.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	right_back.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
-using namespace okapi;
+	//CONTROLS
+	pros::controller_digital_e_t buttonLiftUp = pros::E_CONTROLLER_DIGITAL_L1;
+	pros::controller_digital_e_t buttonLiftDown = pros::E_CONTROLLER_DIGITAL_L2;
+	pros::controller_digital_e_t buttonBackUp = pros::E_CONTROLLER_DIGITAL_R1;
+	pros::controller_digital_e_t buttonBackDown = pros::E_CONTROLLER_DIGITAL_R2;
+	pros::controller_digital_e_t buttonHookOut = pros::E_CONTROLLER_DIGITAL_UP;
+	pros::controller_digital_e_t buttonHookIn = pros::E_CONTROLLER_DIGITAL_DOWN;
+
+
 
 /*
 	std::shared_ptr<okapi::ChassisController> drive =
@@ -199,11 +208,11 @@ using namespace okapi;
 
 
     // LIFT
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+		if(master.get_digital(buttonLiftUp)){
 			liftL.move_velocity(100);
 			liftR.move_velocity(100);
 		}
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+		else if(master.get_digital(buttonLiftDown)) {
 			liftL.move_velocity(-100);
 			liftR.move_velocity(-100);
 		}
@@ -213,13 +222,13 @@ using namespace okapi;
 		}
 
 		//BACK
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) back.move_velocity(100);
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) back.move_velocity(-100);
+		if(master.get_digital(buttonBackUp)) back.move_velocity(100);
+		else if(master.get_digital(buttonBackDown)) back.move_velocity(-100);
 		else back.move_velocity(0);
 
 		//HOOK
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) hook.move_velocity(200);
-		else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) hook.move_velocity(-200);
+		if(master.get_digital(buttonHookOut)) hook.move_velocity(200);
+		else if(master.get_digital(buttonHookIn)) hook.move_velocity(-200);
 		else hook.move_velocity(0);
 
 		pros::delay(10);
